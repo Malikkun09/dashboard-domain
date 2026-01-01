@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subdomain Status Dashboard</title>
+    <!-- Prevent caching for security -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Security: Prevent direct access to dashboard without login (runs immediately)
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+    </script>
+    <style>
+        
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="glass-effect shadow-lg sticky top-0 z-50 border-b border-[#2a2a3a]">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="flex flex-col sm:flex-row justify-between items-center py-3 sm:py-4 gap-3">
+                    <!-- Logo & Title -->
+                    <div class="flex items-center space-x-3 w-full sm:w-auto">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center floating shadow-lg shadow-purple-500/30 flex-shrink-0">
+                            <i class="fas fa-server text-white text-lg sm:text-xl"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h1 class="text-lg sm:text-2xl font-bold gradient-text truncate">Subdomain Status</h1>
+                            <p class="text-xs sm:text-sm text-gray-400 hidden sm:block">Monitor your domains & subdomains</p>
+                        </div>
+                    </div>
+
+                    <!-- Stats & User (hidden on small mobile) -->
+                    <div class="flex items-center justify-between sm:justify-end space-x-4 sm:space-x-6 w-full sm:w-auto">
+                        <!-- Stats - hidden on mobile, shown on md+ -->
+                        <div class="hidden md:flex items-center space-x-6 header-stats">
+                            <div class="text-center">
+                                <div class="text-xl sm:text-2xl font-bold text-white" id="totalCount">0</div>
+                                <div class="text-xs text-gray-400">Total</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl sm:text-2xl font-bold text-green-400" id="onlineCount">0</div>
+                                <div class="text-xs text-gray-400">Online</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl sm:text-2xl font-bold text-purple-400" id="uptimePercent">0%</div>
+                                <div class="text-xs text-gray-400">Uptime</div>
+                            </div>
+                        </div>
+
+                        <!-- User & Logout -->
+                        <div class="flex items-center space-x-2 sm:space-x-3">
+                            <div class="text-xs sm:text-sm text-gray-400 hidden xs:inline">
+                                <i class="fas fa-user-circle mr-1 text-purple-400"></i>
+                                <span id="currentUser" class="text-white">User</span>
+                            </div>
+                            <button onclick="handleLogout()" class="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-all hover:scale-105">
+                                <i class="fas fa-sign-out-alt text-sm"></i>
+                                <span class="hidden sm:inline text-sm">Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="glass-effect rounded-xl p-6 hover:scale-105 transition-transform stat-card-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400">Total Domains</p>
+                            <p class="text-3xl font-bold text-white" id="totalDomains">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-globe text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-effect rounded-xl p-6 hover:scale-105 transition-transform stat-card-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400">Online</p>
+                            <p class="text-3xl font-bold text-green-400" id="onlineDomains">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-effect rounded-xl p-6 hover:scale-105 transition-transform stat-card-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400">Issues</p>
+                            <p class="text-3xl font-bold text-red-400" id="issueDomains">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-effect rounded-xl p-6 hover:scale-105 transition-transform stat-card-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400">Last Check</p>
+                            <p class="text-sm font-bold text-white" id="lastCheck">Never</p>
+                        </div>
+                        <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="glass-effect rounded-xl p-3 sm:p-6 mb-4 sm:mb-6 action-bar">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+                    <!-- Left side - Buttons -->
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start">
+                        <button onclick="showAddModal()" class="flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg sm:rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all flex-1 sm:flex-none">
+                            <i class="fas fa-plus text-sm"></i>
+                            <span class="text-xs sm:text-sm">Add Domain</span>
+                        </button>
+
+                        <button onclick="checkAllDomains()" class="flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-6 py-2 sm:py-3 bg-gray-800 text-gray-300 border border-gray-700 rounded-lg sm:rounded-xl hover:bg-gray-700 transition-all flex-1 sm:flex-none">
+                            <i class="fas fa-sync-alt text-sm"></i>
+                            <span class="text-xs sm:text-sm">Check All</span>
+                        </button>
+                    </div>
+
+                    <!-- Right side - Auto Refresh -->
+                    <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                        <label class="flex items-center space-x-2 cursor-pointer flex-shrink-0">
+                            <input type="checkbox" id="autoRefresh" checked class="rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500 w-4 h-4">
+                            <span class="text-xs sm:text-sm text-gray-400 whitespace-nowrap">Auto Refresh (1 min)</span>
+                        </label>
+
+                        <div id="checkingIndicator" class="hidden flex items-center space-x-2 text-xs sm:text-sm text-purple-400 whitespace-nowrap">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Domain List -->
+            <div id="domainList" class="space-y-3 sm:space-y-4">
+                <!-- Domain cards will be inserted here -->
+            </div>
+        </main>
+
+        <!-- Add Domain Modal -->
+        <div id="addModal" class="hidden fixed inset-0 z-50">
+            <div class="modal-backdrop absolute inset-0" onclick="hideAddModal()"></div>
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="modal-content rounded-xl p-6 max-w-md w-full relative fade-in border border-purple-500/30">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-white">Add New Domain</h3>
+                        <button onclick="hideAddModal()" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <form id="addDomainForm">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Domain Name</label>
+                            <input type="text" id="domainName" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white" placeholder="example.com" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Type</label>
+                            <select id="domainType" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white">
+                                <option value="domain">Domain</option>
+                                <option value="subdomain">Subdomain</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Category</label>
+                            <input type="text" id="domainCategory" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white" placeholder="e.g., API Service">
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="hideAddModal()" class="px-6 py-3 bg-gray-800 text-gray-400 border border-gray-700 rounded-lg hover:bg-gray-700 hover:text-white transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+                                <i class="fas fa-plus mr-2"></i>
+                                Add Domain
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Modal -->
+        <div id="logModal" class="hidden fixed inset-0 z-50">
+            <div class="modal-backdrop absolute inset-0" onclick="hideLogModal()"></div>
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="modal-content rounded-xl p-6 max-w-2xl w-full relative fade-in border border-purple-500/30">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Check Log</h3>
+                            <p class="text-sm text-gray-400 mt-1" id="logDomainName">domain.com</p>
+                        </div>
+                        <button onclick="hideLogModal()" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <div id="logContent" class="max-h-96 overflow-y-auto">
+                        <!-- Log entries will be inserted here -->
+                    </div>
+
+                    <div class="flex justify-end mt-6 pt-4 border-t border-gray-700">
+                        <button onclick="clearDomainLogs()" class="px-6 py-3 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors">
+                            <i class="fas fa-trash-alt mr-2"></i>
+                            Clear Logs
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+
+</body>
+</html>
