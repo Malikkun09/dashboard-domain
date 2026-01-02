@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subdomain Status Dashboard</title>
+    <link rel="stylesheet" href="css/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .loading-container {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+
+        .loading-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .loading-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        .loading-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .loading-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 40px;
+        }
+
+        .progress-container {
+            width: 300px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.1s ease;
+        }
+
+        .progress-text {
+            margin-top: 15px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .name-input-container {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .name-input-container.show {
+            display: block;
+        }
+
+        .name-input-container h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .name-input-container p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 30px;
+        }
+
+        .name-input-wrapper {
+            position: relative;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 15px 20px;
+            padding-left: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .name-input:focus {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .name-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .name-input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            fill: rgba(255, 255, 255, 0.5);
+        }
+
+        .submit-btn {
+            margin-top: 20px;
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container" id="loadingContainer">
+        <div class="loading-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+        </div>
+        <h1 class="loading-title">Subdomain Status</h1>
+        <p class="loading-subtitle">Memuat dashboard Anda...</p>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p class="progress-text" id="progressText">0%</p>
+        <button onclick="clearNameAndRetry()" class="text-xs text-gray-500 hover:text-white mt-4 underline" style="background: none; border: none; cursor: pointer;">Ubah Nama</button>
+    </div>
+
+    <div class="name-input-container" id="nameInputContainer">
+        <h1>Halo! Siapa Namamu?</h1>
+        <p>Masukkan nama Anda untuk melanjutkan ke dashboard</p>
+        <div class="name-input-wrapper">
+            <svg class="name-input-icon" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            <input type="text" id="nameInput" class="name-input" placeholder="Masukkan nama Anda" autocomplete="off">
+        </div>
+        <button class="submit-btn" onclick="submitName()">Lanjutkan</button>
+    </div>
+
+    <script>
+        // Check if user name exists
+        const existingName = localStorage.getItem('userName');
+
+        if (existingName) {
+            // User already has a name, show loading and redirect to dashboard
+            document.getElementById('loadingContainer').style.display = 'block';
+            document.getElementById('nameInputContainer').classList.remove('show');
+
+            // Loading animation
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            let progress = 0;
+
+            function updateProgress() {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+
+                progressBar.style.width = progress + '%';
+                progressText.textContent = Math.round(progress) + '%';
+
+                if (progress < 100) {
+                    setTimeout(updateProgress, Math.random() * 100 + 50);
+                } else {
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 500);
+                }
+            }
+
+            updateProgress();
+        } else {
+            // No user name, show input form
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('nameInputContainer').classList.add('show');
+
+            // Focus on input
+            document.getElementById('nameInput').focus();
+
+            // Allow Enter key to submit
+            document.getElementById('nameInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitName();
+                }
+            });
+        }
+
+        function clearNameAndRetry() {
+            // Clear the userName from localStorage
+            localStorage.removeItem('userName');
+            // Reload page to show name input
+            location.reload();
+        }
+
+        function submitName() {
+            const nameInput = document.getElementById('nameInput');
+            const name = nameInput.value.trim();
+
+            if (!name) {
+                nameInput.style.borderColor = '#ef4444';
+                setTimeout(() => {
+                    nameInput.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }, 2000);
+                return;
+            }
+
+            // Save name to localStorage
+            localStorage.setItem('userName', name);
+
+            // Show loading and redirect
+            document.getElementById('nameInputContainer').classList.remove('show');
+            document.getElementById('loadingContainer').style.display = 'block';
+
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            let progress = 0;
+
+            function updateProgress() {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+
+                progressBar.style.width = progress + '%';
+                progressText.textContent = Math.round(progress) + '%';
+
+                if (progress < 100) {
+                    setTimeout(updateProgress, Math.random() * 100 + 50);
+                } else {
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 500);
+                }
+            }
+
+            updateProgress();
+        }
+    </script>
+</body>
+</html>
